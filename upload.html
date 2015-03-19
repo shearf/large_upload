@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>upload file file</title>
+<script type="text/javascript" src="src/jquery-2.1.1.min.js"></script>
+<script type="text/javascript" src="src/largeFileUpload.js"></script>
+<script type="text/javascript" src="src/upload.js"></script>
+</head>
+<body>
+<div id="upload_large_file_container">
+	<input id="upload_large_file_input_file" type="file" name="file" value />
+	<button id="upload_large_file_upload_button">上传</button>
+	<button id="upload_large_file_cancel_button">取消</button>
+</div>
+<script type="text/javascript">
+	
+	$('#upload_large_file_container').largeFileUpload({
+		url : 'large_upload.php',
+		per_size : 100 * 1024,
+		size_limit : 4000,
+
+		init_handle : BIG_FILE_UPLOAD.init,
+		browse_file_handle : BIG_FILE_UPLOAD.browseFile,
+		browse_file_complete_handle : BIG_FILE_UPLOAD.loadFileComplete,
+		upload_process_handle : BIG_FILE_UPLOAD.uploadProcess,
+		upload_complete_handle : BIG_FILE_UPLOAD.uploadComplete,
+		upload_error_handle : BIG_FILE_UPLOAD.uploadError,
+
+		file_types : '*.avi;*.mp4;*.wmv;*.mov;*.flv;*.ogg;*.rmvb;',
+		file_desc : '视频文件'
+	});
+</script>
+</body>
+</html>

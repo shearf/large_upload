@@ -50,7 +50,7 @@
 				var file_name, file_ext = '';
 
 				var file, url;
-				var is_stoped = true;
+				var _is_requesting = false;				//是否在进行网络请求中
 				var xhr2 = new XMLHttpRequest();
 
 				var callback_init = options.init_handle;
@@ -59,6 +59,10 @@
 				var callback_upload_process = options.upload_process_handle;
 				var callback_upload_complete = options.upload_complete_handle;
 				var callback_upload_error = options.upload_error_handle;
+				var callback_start_upload = options.start_upload_handle;
+				var callback_continue_upload = options.continue_upload_handle;
+				var callback_pause_upload = options.pause_upload_handle;
+				var callback_cancel_upload = options.cancel_upload_handle;
 
 				var $wrap = $('#' + this.id);
 				var file_input_id = this.id + '_' + 'btn_browse';
@@ -133,9 +137,9 @@
 						case Html5LargeFileUpload.upload_status.CANCEL_UPLOAD :
 
 							$inputFile.prop('disabled', false);
-							$inputFile.text('');
+							$inputFile.val('');
 
-							$btnUpload.prop('disabled', false);
+							$btnUpload.prop('disabled', true);
 							$btnCancel.prop('disabled', true);
 
 							$btnUpload.text(options.start_upload_button_label);
@@ -145,10 +149,18 @@
 
 							$inputFile.prop('disabled', false);
 							$btnUpload.prop('disabled', false);
-							$cancelUpload.prop('disabled', true);
+							$btnCancel.prop('disabled', false);
 
 							$btnUpload.text(options.start_upload_button_label);
 
+							break;
+						case Html5LargeFileUpload.upload_status.UPLOAD_COMPLETE :
+
+							$inputFile.prop('disabled', false);
+							$btnUpload.prop('disabled', true);
+							$btnCancel.prop('disabled', true);
+
+							$btnUpload.text(options.start_upload_button_label);
 							break;
 					}
 
@@ -175,7 +187,7 @@
 
 					file_ext = file_name.substring(file_name.lastIndexOf('.')).toLowerCase();
 
-					if (options.file_types != '*.*' || options.file_types != '')
+					if (options.file_types != '*.*' && options.file_types != '')
 					{
 						if (options.file_types.indexOf(file_ext) <= 0) 		//该文件不在接受的文件范围内
 						{
@@ -197,8 +209,9 @@
 
 					//先查询服务器端，获得已经上传数据大小
 					url = options.url + '?file_name=' + file.name + '&file_size=' + file.size;
-					xhr2.open('GET', url, false);
+					xhr2.open('GET', url);
 					xhr2.send();
+					_is_requesting = true;
 
 				};
 
@@ -213,6 +226,8 @@
 					$btnUpload.off('click').on('click', pauseUpload);
 
 					_uploadFileData();		//上传文件
+
+					callback_start_upload();
 				};
 
 				/**
@@ -224,6 +239,8 @@
 					updateButtons();
 
 					$btnUpload.off('click').on('click', continueUpload);
+
+					// callback_pause_upload(); 需要等待服务器响应
 				};
 
 				/**
@@ -234,6 +251,10 @@
 					curr_upload_status = Html5LargeFileUpload.upload_status.CONTINUE_UPLOAD;
 					updateButtons();
 					$btnUpload.off('click').on('click', pauseUpload);
+
+					_uploadFileData();
+
+					callback_continue_upload();
 				};
 
 				/**
@@ -244,8 +265,12 @@
 					curr_upload_status = Html5LargeFileUpload.upload_status.CANCEL_UPLOAD;
 					updateButtons();
 
+					$inputFile.val('');
+
 					$btnUpload.off('click').on('click', startUpload);
 					$btnCancel.off('click');
+
+					callback_cancel_upload();
 				};
 
 				/**
@@ -256,6 +281,10 @@
 				var _uploadProcess = function(send) {
 
 					callback_upload_process(file_size, send);
+
+					if (curr_upload_status === Html5LargeFileUpload.upload_status.PAUSE_UPLOAD) {
+						callback_pause_upload();
+					}
 				};
 
 				/**
@@ -265,7 +294,7 @@
 				 */
 				var _uploadComplete = function(path) {
 
-					curr_upload_status = Html5LargeFileUpload.upload_status.uploadComplete;
+					curr_upload_status = Html5LargeFileUpload.upload_status.UPLOAD_COMPLETE;
 					updateButtons();
 
 					$btnUpload.off('click');
@@ -296,15 +325,19 @@
 				 * @return {[type]}
 				 */
 				var _uploadFileData = function() {
-					xhr2.open('POST', url, false);
-					xhr2.setRequestHeader("Content-type", "application/octet-stream");
-					var end = begin + options.per_size < file_size ? begin + options.per_size : file_size;
-					var blob = Html5LargeFileUpload.fileSlice(file, begin, end);
-					var fr = new FileReader();
-					fr.readAsArrayBuffer(blob);
-					fr.onload = function() {
-						xhr2.send(fr.result);
-					};
+
+					if (!_is_requesting) {
+						xhr2.open('POST', url);
+						xhr2.setRequestHeader("Content-type", "application/octet-stream");
+						var end = begin + options.per_size < file_size ? begin + options.per_size : file_size;
+						var blob = Html5LargeFileUpload.fileSlice(file, begin, end);
+						var fr = new FileReader();
+						fr.readAsArrayBuffer(blob);
+						fr.onload = function() {
+							xhr2.send(fr.result);
+							_is_requesting = true;
+						};
+					}
 				};
 
 				/**
@@ -341,16 +374,17 @@
 				 * @return {[type]}
 				 */
 				xhr2.onerror = function(event) {
+					_is_requesting = false;
 					callback_upload_error(Html5LargeFileUpload.error_code.RESPONSE_ERROR, xhr2.status);
 				};
 
 				xhr2.onloadend = function(event) {
+					_is_requesting = false;
 					if (xhr2.status == Html5LargeFileUpload.error_code.RESPONSE_SUCCESS) {
 						var data = $.parseJSON(xhr2.responseText);
 						if (data.statusCode == Html5LargeFileUpload.error_code.RESPONSE_SUCCESS) {
 							begin = parseInt(data.send, 10);
 
-							console.info(curr_upload_status);
 							if (curr_upload_status === Html5LargeFileUpload.upload_status.SELECT_FILE) {
 
 								_loadFileComplete(file_name, file_size, begin);

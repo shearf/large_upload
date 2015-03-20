@@ -8,10 +8,30 @@
 <script type="text/javascript" src="src/upload.js"></script>
 </head>
 <body>
+<style type="text/css">
+#upload_large_file_info {margin-top: 20px; padding: 10px;}
+#upload_large_file_info dl {padding: 4px;}
+#upload_large_file_info dt, dd {float: left};
+</style>
 <div id="upload_large_file_container">
-	<input id="upload_large_file_input_file" type="file" name="file" value />
-	<button id="upload_large_file_upload_button">上传</button>
-	<button id="upload_large_file_cancel_button">取消</button>
+</div>
+<div id="upload_large_file_info">
+	<dl>
+		<dt>文件名:</dt>
+		<dd class="file_name"></dd>
+	</dl>
+	<dl>
+		<dt>大小:</dt>
+		<dd class="file_size"></dd>
+	</dl>
+	<dl>
+		<dt>进度:</dt>
+		<dd class="upload_process"></dd>
+	</dl>
+	<dl>
+		<dt>当前状态:</dt>
+		<dd class="upload_status"></dd>
+	</dl>
 </div>
 <script type="text/javascript">
 	
@@ -26,9 +46,14 @@
 		upload_process_handle : BIG_FILE_UPLOAD.uploadProcess,
 		upload_complete_handle : BIG_FILE_UPLOAD.uploadComplete,
 		upload_error_handle : BIG_FILE_UPLOAD.uploadError,
+		start_upload_handle : BIG_FILE_UPLOAD.startUpload,
+		continue_upload_handle : BIG_FILE_UPLOAD.continueUpload,
+		cancel_upload_handle : BIG_FILE_UPLOAD.cancelUpload,
+		pause_upload_handle : BIG_FILE_UPLOAD.pauseUpload,
 
-		file_types : '*.avi;*.mp4;*.wmv;*.mov;*.flv;*.ogg;*.rmvb;',
-		file_desc : '视频文件'
+		// file_types : '*.avi;*.mp4;*.wmv;*.mov;*.flv;*.ogg;*.rmvb;',
+		// file_desc : '视频文件'
+		file_types : '*.*'
 	});
 </script>
 </body>

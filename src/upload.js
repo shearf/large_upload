@@ -19,7 +19,9 @@ var BIG_FILE_UPLOAD = {
 	loadFileComplete : function(file_name, file_size, send) {
 		$('#upload_large_file_info').find('.file_name').text(file_name);
 		$('#upload_large_file_info').find('.file_size').text(file_size);
+		console.debug('load file info complete');
 		var percent = BIG_FILE_UPLOAD._getProcessPercent(send, file_size);
+		console.debug('get process');
 		$('#upload_large_file_info').find('.upload_process').text(send + '/' + file_size + '(' + percent + '%)');
 		BIG_FILE_UPLOAD.updateStatus('完成文件加载，可以开始上传');
 	},

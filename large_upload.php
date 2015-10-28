@@ -1,5 +1,8 @@
 <?php
-$post_data = file_get_contents('php://input');
+// $post_data = php://input;
+// $post_data = http_get_request_body();
+$fd = fopen('php://input', 'rb');
+$post_data = stream_get_contents($fd);
 
 
 $file_name = substr($_GET['file_name'], 0, strrpos($_GET['file_name'], '.'));
@@ -10,7 +13,7 @@ define('FILE_PATH_PHY', dirname(__FILE__) . DIRECTORY_SEPARATOR . 'files' . DIRE
 define('FILE_PATH', 'files' . DIRECTORY_SEPARATOR);
 
 $cookie_name = md5($file_name);					//防止中文乱码
-$tmp_file = $_COOKIE[$cookie_name];
+$tmp_file = isset($_COOKIE[$cookie_name]) ? $_COOKIE[$cookie_name] : '';
 
 $target_file_dir = FILE_PATH_PHY . date('Ymd') . DIRECTORY_SEPARATOR;
 if (!is_dir($target_file_dir)) {

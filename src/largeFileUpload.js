@@ -328,15 +328,21 @@
 
 					if (!_is_requesting) {
 						xhr2.open('POST', url);
-						xhr2.setRequestHeader("Content-type", "application/octet-stream");
+						// xhr2.setRequestHeader("Content-type", "application/octet-stream");
 						var end = begin + options.per_size < file_size ? begin + options.per_size : file_size;
-						var blob = Html5LargeFileUpload.fileSlice(file, begin, end);
+						var blob = Html5LargeFileUpload.fileSlice(file, begin, end, 'application/octet-stream');
+
+						xhr2.send(blob);
+						_is_requesting = true;
+						/* 重新用文件载入到文件中实现传输的方式错误
 						var fr = new FileReader();
 						fr.readAsArrayBuffer(blob);
 						fr.onload = function() {
+							var data = fr.result;
 							xhr2.send(fr.result);
 							_is_requesting = true;
 						};
+						*/
 					}
 				};
 

@@ -1,4 +1,5 @@
 <?php
+include "config.php";
 // $post_data = php://input;
 // $post_data = http_get_request_body();
 $fd = fopen('php://input', 'rb');
